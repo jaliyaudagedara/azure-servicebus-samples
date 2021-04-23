@@ -12,7 +12,11 @@ namespace AzServiceBusQueueSessions.Receiver
             await using var client = new ServiceBusClient(Shared.Configuration.CONNECTION_STRING);
 
             var cts = new CancellationTokenSource();
-            Console.CancelKeyPress += (a, o) => { cts.Cancel(); };
+            Console.CancelKeyPress += (a, o) =>
+            {
+                Console.WriteLine("---I am Dead!---");
+                cts.Cancel();
+            };
 
             do
             {

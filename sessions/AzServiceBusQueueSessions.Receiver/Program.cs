@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Console;
 
 namespace AzServiceBusQueueSessions.Receiver
 {
@@ -12,9 +13,9 @@ namespace AzServiceBusQueueSessions.Receiver
             await using var client = new ServiceBusClient(Shared.Configuration.CONNECTION_STRING);
 
             var cts = new CancellationTokenSource();
-            Console.CancelKeyPress += (a, o) =>
+            CancelKeyPress += (a, o) =>
             {
-                Console.WriteLine("---I am Dead!---");
+                WriteLine("---I am Dead!---");
                 cts.Cancel();
             };
 
@@ -23,7 +24,7 @@ namespace AzServiceBusQueueSessions.Receiver
                 // Here we are accepting the next Session which isn't locked by any other receiver
                 ServiceBusSessionReceiver receiver = await client.AcceptNextSessionAsync(Shared.Configuration.QUEUE_NAME);
 
-                Console.WriteLine($"Receiver started for SessionId: '{receiver.SessionId}'.");
+                WriteLine($"Receiver started for SessionId: '{receiver.SessionId}'.");
 
                 ServiceBusReceivedMessage message = null;
                 do
@@ -33,12 +34,12 @@ namespace AzServiceBusQueueSessions.Receiver
                     {
                         try
                         {
-                            Console.WriteLine($"Received: '{message.Body}', Ack: Complete");
+                            WriteLine($"Received: '{message.Body}', Ack: Complete");
                             await receiver.CompleteMessageAsync(message, cts.Token);
                         }
                         catch
                         {
-                            Console.WriteLine($"Received: '{message.Body}', Ack: Abondon");
+                            WriteLine($"Received: '{message.Body}', Ack: Abondon");
                             await receiver.AbandonMessageAsync(message, cancellationToken: cts.Token);
                         }
                     }

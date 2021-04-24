@@ -1,9 +1,9 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Console;
 
 namespace AzServiceBusQueueSessions.Sender
 {
@@ -40,7 +40,7 @@ namespace AzServiceBusQueueSessions.Sender
 
             await serviceBusSender.SendMessageAsync(message);
 
-            Console.WriteLine($"Message sent: Session '{message.SessionId}', Message = '{applicationMessage.Message}'");
+            WriteLine($"Message sent: Session '{message.SessionId}', Message = '{applicationMessage.Message}'");
         }
     }
 }

@@ -12,6 +12,13 @@ namespace AzServiceBusQueueSessions.Receiver
         {
             await using var client = new ServiceBusClient(Shared.Configuration.CONNECTION_STRING);
 
+            //await RunWithSessionReceiver(client);
+
+            await RunWithSessionProcessor(client);
+        }
+
+        private static async Task RunWithSessionReceiver(ServiceBusClient client)
+        {
             var cts = new CancellationTokenSource();
             CancelKeyPress += (a, o) =>
             {
@@ -48,6 +55,48 @@ namespace AzServiceBusQueueSessions.Receiver
                 await receiver.CloseAsync();
             }
             while (!cts.IsCancellationRequested);
+        }
+
+        private static async Task RunWithSessionProcessor(ServiceBusClient client)
+        {
+            var options = new ServiceBusSessionProcessorOptions()
+            {
+                MaxConcurrentSessions = 1
+            };
+
+            ServiceBusSessionProcessor processor = client.CreateSessionProcessor(Shared.Configuration.QUEUE_NAME, options);
+
+            processor.SessionInitializingAsync += async args =>
+            {
+                WriteLine($"Initializing for Session: '{args.SessionId}' at '{DateTimeOffset.UtcNow}', SessionLockedUntil: '{args.SessionLockedUntil}'");
+            };
+
+            processor.SessionClosingAsync += async args =>
+            {
+                WriteLine($"Closing Session: '{args.SessionId}' at '{DateTimeOffset.UtcNow}'\n");
+            };
+
+            processor.ProcessMessageAsync += async args =>
+            {
+                WriteLine($"Received for Session: '{args.SessionId}', Message: '{args.Message.Body}', Ack: Complete");
+            };
+
+            processor.ProcessErrorAsync += async args =>
+            {
+                WriteLine($"Exception for Session: '{args.Exception.Message}'");
+            };
+
+            WriteLine("Starting...Press any character to gracefully exit.");
+
+            await processor.StartProcessingAsync();
+
+            ReadKey();
+
+            WriteLine("Stopping...");
+
+            await processor.StopProcessingAsync();
+
+            WriteLine("Stopped!");
         }
     }
 }
